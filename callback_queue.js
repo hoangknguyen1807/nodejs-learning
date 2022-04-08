@@ -27,15 +27,13 @@ function syncTaskOccupyingCallStack() {
   console.log(count);
 }
 
-// syncTaskOccupyingCallStack();
+syncTaskOccupyingCallStack();
 
-const whileLoop = (count) => {
-  let start = new Date();
-  let i = 0;
-  while (i < count) {
-    i++;
-  }
-  console.log('Diff:', new Date().valueOf() - start.valueOf());
-};
+// const whileLoop = (count) => {
+//   let start = new Date();
+//   let i = 0;
+//   while (i++ < count) {}
+//   console.log('Diff:', new Date().valueOf() - start.valueOf());
+// };
 
-whileLoop(5500000000);
+// whileLoop(5500000000);
