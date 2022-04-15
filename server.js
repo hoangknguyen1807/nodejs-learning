@@ -1,10 +1,8 @@
 import express from 'express';
+import 'dotenv/config';
 
 import axios from 'axios';
-
 import { createHmac } from 'crypto';
-
-(await import ('dotenv')).config();
 
 const app = express();
 const PORT = 3000;
@@ -33,13 +31,36 @@ app.get('/error', (req, res) => {
 	res.sendStatus(400);
 });
 
+function calculateHmacDigest(algo, secret, data) {
+	const hmac = createHmac(algo, secret);
+	hmac.update(data);
+	return hmac.digest('hex');
+}
+
 app.get('/ftx/markets', (req, res) => {
+	// const ts = (new Date()).valueOf();
+	// const method = 'GET';
+	// const path = '/markets';
+	// const signaturePayload = ts + method + '/api' + path;
+
+	ftxAPI.get('/markets'
+		// {headers: {
+		// 	'FTXUS-TS': ts,
+		// 	'FTXUS-SIGN': signature
+		// }}
+	).then((resp) => {
+		res.status(200).send(resp.data);
+	}, (err) => {
+		console.log(err);
+		res.status(400).send({err: err + ''});
+	});
+});
+
+app.get('/ftx/subaccounts', (req, res) => {
 	const ts = (new Date()).valueOf();
 	const method = 'GET';
-	const path = '/markets';
-	const hmac = createHmac('sha256', FTXUS_API_SECRET);
-	hmac.update(ts + method + path);
-	const signature = hmac.digest('hex');
+	const path = '/subaccounts';
+	const signature = calculateHmacDigest('sha256', FTXUS_API_SECRET, (ts + method + '/api' + path));
 
 	ftxAPI.get(path, {
 		headers: {
@@ -49,7 +70,48 @@ app.get('/ftx/markets', (req, res) => {
 	}).then((resp) => {
 		res.status(200).send(resp.data);
 	}, (err) => {
-		console.log(err);
+		console.log(err.response.data);
+		res.status(400).send({err: err + ''});
+	});
+});
+
+app.get('/ftx/wallet/balances', (req, res) => {
+	const ts = (new Date()).valueOf();
+	const method = 'GET';
+	const path = '/wallet/balances';
+	const signature = calculateHmacDigest('sha256', FTXUS_API_SECRET, (ts + method + '/api' + path));
+
+	ftxAPI.get(path, {
+		headers: {
+			'FTXUS-TS': ts,
+			'FTXUS-SIGN': signature
+		}
+	}).then((resp) => {
+		res.status(200).send(resp.data);
+	}, (err) => {
+		console.log(err.response.data);
+		res.status(400).send({err: err + ''});
+	});
+});
+
+app.get('/ftx/wallet/deposit_address/:coin', (req, res) => {
+	const coin = req.params.coin;
+	const standard = req.query.method;
+
+	const ts = (new Date()).valueOf();
+	const method = 'GET';
+	const path = `/wallet/deposit_address/${coin}?method=${standard}`;
+	const signature = calculateHmacDigest('sha256', FTXUS_API_SECRET, (ts + method + '/api' + path));
+
+	ftxAPI.get(path, {
+		headers: {
+			'FTXUS-TS': ts,
+			'FTXUS-SIGN': signature
+		}
+	}).then((resp) => {
+		res.status(200).send(resp.data);
+	}, (err) => {
+		console.log(err.response.data);
 		res.status(400).send({err: err + ''});
 	});
 });
